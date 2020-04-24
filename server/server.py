@@ -25,6 +25,7 @@ def broadcast(msg, name):
         client = person.client
         client.send(bytes(name, "utf8") + msg)
 
+
 def client_communication(person):
     """
     Thread to handle all messages from client
@@ -32,7 +33,7 @@ def client_communication(person):
     :return: None
     """
     client = person.client
-    # get personss name
+    # get persons name
     name = client.recv(BUFSIZ).decode("utf8")
     person.set_name(name)
     msg = bytes(f"{name} has joined the chat!", "utf8")
@@ -41,20 +42,20 @@ def client_communication(person):
         try:
             msg = client.recv(BUFSIZ)
             if msg == bytes("{quit}", "utf8"):
-                broadcast(f"{name} has left the chat...", "")
-                client.send(bytes("{quit}", "utf8"))
                 client.close()
                 persons.remove(person)
+                broadcast(f"{name} has left the chat...", "")
                 print(f"[DISCONNECTED]{name} disconnected")
                 break
             else:
                 broadcast(msg, name+": ")
+                print(f"{name}: ", msg.decode("utf8"))
         except Exception as e:
             print("[EXCEPTION]", e)
             break
 
 
-def wait_for_connection(SERVER):
+def wait_for_connection():
     """
     Wait for connection from new clients, start new thread once connected
     :param SERVER: SOCKET
@@ -74,11 +75,10 @@ def wait_for_connection(SERVER):
     print("SERVER CRASHED")
 
 
-
 if __name__ == "__main__":
-    SERVER.listen(5) # listen for connections
+    SERVER.listen(MAX_CONNECTIONS)  # listen for connections
     print("[STARTED] Waiting for connections...")
-    ACCEPT_THREAD: Thread = Thread(target=wait_for_connection, args=(SERVER,))
+    ACCEPT_THREAD: Thread = Thread(target=wait_for_connection)
     ACCEPT_THREAD.start()
     ACCEPT_THREAD.join()
     SERVER.close()

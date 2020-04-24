@@ -40,11 +40,9 @@ def send_message(msg):
         client_socket.close()
 
 
-
 receive_thread = Thread(target=receive_message)
 receive_thread.start()
 
 send_message("Tim")
 time.sleep(10)
 send_message("hello")
-send_message("{quit}")
