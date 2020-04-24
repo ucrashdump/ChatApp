@@ -1,48 +1,43 @@
-from socket import AF_INET, socket, SOCK_STREAM
-from threading import Thread
+from client import Client
 import time
+from threading import Thread
 
-# GLOBAL CONSTANTS
-HOST = "localhost"
-PORT = 5500
-ADDR = (HOST, PORT)
-BUFSIZ = 512
 
-# GLOBAL VARIABLES
-messages = []
+c1 = Client("tim")
+c2 = Client("Joe")
 
-client_socket = socket(AF_INET, SOCK_STREAM)
-client_socket.connect(ADDR)
 
-def receive_message():
+def update_messages():
     """
-    receive messages from server
+    updates the local list of messages
     :return: None
     """
-    while True:
-        try:
-            msg = client_socket.recv(BUFSIZ).decode()
-            messages.append(msg)
+    msgs = []
+    run = True
+    while run:
+        time.sleep(0.1)  # update every 1/10 of a second
+        new_messages = c1.get_messages()  # get any new messages from client
+        msgs.extend(new_messages)  # add to local list of messages
+
+        for msg in new_messages:  # display new messages
             print(msg)
-        except Exception as e:
-            print("[EXCEPTION]", e)
-            break
+
+            if msg == "{quit}":
+                run = False
+                break
 
 
-def send_message(msg):
-    """
-    send messages to server
-    :param msg: str
-    :return: None
-    """
-    client_socket.send(bytes(msg, "utf8"))
-    if msg == "{quit}":
-        client_socket.close()
+Thread(target=update_messages).start()
 
+c1.send_message("hello")
+time.sleep(1)
+c2.send_message("hello")
+time.sleep(1)
+c1.send_message("whats up")
+time.sleep(5)
+c2.send_message("Nothing much")
+time.sleep(5)
 
-receive_thread = Thread(target=receive_message)
-receive_thread.start()
-
-send_message("Tim")
-time.sleep(10)
-send_message("hello")
+c1.disconnect()
+time.sleep(2)
+c2.disconnect()
